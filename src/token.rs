@@ -9,10 +9,10 @@ static DEFAULE_TOKEN_LIST: Lazy<HashMap<u8, TokenInfo>> = Lazy::new(|| {
     data.insert(b' ', TokenInfo::Symbol(SymbolType::Blank));
     data.insert(b'(', TokenInfo::Symbol(SymbolType::LeftBracket));
     data.insert(b')', TokenInfo::Symbol(SymbolType::RightBracket));
-    data.insert(b'+', TokenInfo::Func(FuncType::Add));
-    data.insert(b'-', TokenInfo::Func(FuncType::Sub));
-    data.insert(b'*', TokenInfo::Func(FuncType::Mul));
-    data.insert(b'/', TokenInfo::Func(FuncType::Div));
+    data.insert(b'+', TokenInfo::Symbol(SymbolType::Add));
+    data.insert(b'-', TokenInfo::Symbol(SymbolType::Sub));
+    data.insert(b'*', TokenInfo::Symbol(SymbolType::Mul));
+    data.insert(b'/', TokenInfo::Symbol(SymbolType::Div));
     data
 });
 
@@ -26,8 +26,19 @@ pub struct Token {
 #[derive(Debug, Clone)]
 pub enum TokenInfo {
     Number(Num),        // 数字
-    Func(FuncType),     // 函数
     Symbol(SymbolType), // 符号
+}
+
+// 符号类型
+#[derive(Debug, Clone)]
+pub enum SymbolType {
+    LeftBracket,  // 左括号
+    RightBracket, // 右括号
+    Blank,        // 空格
+    Add,          // 加
+    Sub,          // 减
+    Mul,          // 乘
+    Div,          // 除
 }
 
 impl fmt::Display for TokenInfo {
@@ -37,35 +48,16 @@ impl fmt::Display for TokenInfo {
                 SymbolType::LeftBracket => write!(f, "("),
                 SymbolType::RightBracket => write!(f, ")"),
                 SymbolType::Blank => write!(f, "_"),
+                SymbolType::Add => write!(f, "+"),
+                SymbolType::Sub => write!(f, "-"),
+                SymbolType::Mul => write!(f, "*"),
+                SymbolType::Div => write!(f, "/"),
             },
             TokenInfo::Number(number) => {
                 write!(f, "{}", number)
             }
-            TokenInfo::Func(func) => match func {
-                FuncType::Add => write!(f, "+"),
-                FuncType::Sub => write!(f, "-"),
-                FuncType::Mul => write!(f, "*"),
-                FuncType::Div => write!(f, "/"),
-            },
         }
     }
-}
-
-// 函数类型
-#[derive(Debug, Clone)]
-pub enum FuncType {
-    Add, // 加
-    Sub, // 减
-    Mul, // 乘
-    Div, // 除
-}
-
-// 符号类型
-#[derive(Debug, Clone)]
-pub enum SymbolType {
-    LeftBracket,  // 左括号
-    RightBracket, // 右括号
-    Blank,        // 空格
 }
 
 #[derive(Debug)]

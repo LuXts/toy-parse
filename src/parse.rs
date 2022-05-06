@@ -46,10 +46,10 @@ fn a1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
 
 fn o1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
     if let Some(f) = input.first() {
-        if let TokenInfo::Func(FuncType::Add) = f.info {
+        if let TokenInfo::Symbol(SymbolType::Add) = f.info {
             input.remove(0);
             return Ok(());
-        } else if let TokenInfo::Func(FuncType::Sub) = f.info {
+        } else if let TokenInfo::Symbol(SymbolType::Sub) = f.info {
             input.remove(0);
             return Ok(());
         } else {
@@ -91,10 +91,10 @@ fn m1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
 
 fn o2(input: &mut Vec<Token>) -> Result<(), ParseErr> {
     if let Some(f) = input.first() {
-        if let TokenInfo::Func(FuncType::Mul) = f.info {
+        if let TokenInfo::Symbol(SymbolType::Mul) = f.info {
             input.remove(0);
             return Ok(());
-        } else if let TokenInfo::Func(FuncType::Div) = f.info {
+        } else if let TokenInfo::Symbol(SymbolType::Div) = f.info {
             input.remove(0);
             return Ok(());
         } else {
@@ -156,7 +156,7 @@ fn num(input: &mut Vec<Token>) -> Result<(), ParseErr> {
                 input.remove(0);
                 return Ok(());
             }
-            TokenInfo::Func(FuncType::Add) => {
+            TokenInfo::Symbol(SymbolType::Add) => {
                 if let Some(f) = input.get(1) {
                     if let TokenInfo::Number(_) = f.info {
                         input.remove(0);
@@ -169,7 +169,7 @@ fn num(input: &mut Vec<Token>) -> Result<(), ParseErr> {
                     position: 0,
                 });
             }
-            TokenInfo::Func(FuncType::Sub) => {
+            TokenInfo::Symbol(SymbolType::Sub) => {
                 if let Some(f) = input.get(1) {
                     if let TokenInfo::Number(_) = f.info {
                         input.remove(0);
