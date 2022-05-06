@@ -14,26 +14,16 @@ pub struct ASTRoot {
 }
 #[derive(Debug)]
 pub enum ASTNode {
-    Expression(Expression),
-    NUmber(Number),
+    Expression(Box<ASTNode>, OperatorType, Box<ASTNode>),
+    Number(bool, Num),
 }
+
 #[derive(Debug)]
-pub struct Expression {
-    pub left: Box<ASTNode>,
-    pub func: FuncType,
-    pub right: Box<ASTNode>,
-}
-#[derive(Debug)]
-pub enum FuncType {
+pub enum OperatorType {
     Add, // 加
     Sub, // 减
     Mul, // 乘
     Div, // 除
-}
-#[derive(Debug)]
-pub struct Number {
-    pub is_pos: bool,
-    pub value: Num,
 }
 
 pub fn s(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
@@ -66,23 +56,19 @@ fn a(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
         if right.is_err() {
             return Ok(re);
         }
-        re = Box::new(ASTNode::Expression(Expression {
-            left: re,
-            func: op.unwrap(),
-            right: right.unwrap(),
-        }));
+        re = Box::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
     Ok(re)
 }
 
-fn o1(input: &mut Vec<Token>) -> Result<FuncType, ParseErr> {
+fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Add) = f.info {
             input.remove(0);
-            return Ok(FuncType::Add);
+            return Ok(OperatorType::Add);
         } else if let TokenInfo::Symbol(SymbolType::Sub) = f.info {
             input.remove(0);
-            return Ok(FuncType::Sub);
+            return Ok(OperatorType::Sub);
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 + 或 - ，却得到了 '{}' 。", f.info).to_owned(),
@@ -112,23 +98,19 @@ fn m(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
         if right.is_err() {
             return Ok(re);
         }
-        re = Box::new(ASTNode::Expression(Expression {
-            left: re,
-            func: op.unwrap(),
-            right: right.unwrap(),
-        }));
+        re = Box::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
     Ok(re)
 }
 
-fn o2(input: &mut Vec<Token>) -> Result<FuncType, ParseErr> {
+fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Mul) = f.info {
             input.remove(0);
-            return Ok(FuncType::Mul);
+            return Ok(OperatorType::Mul);
         } else if let TokenInfo::Symbol(SymbolType::Div) = f.info {
             input.remove(0);
-            return Ok(FuncType::Div);
+            return Ok(OperatorType::Div);
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 * 或 / ，却得到了 '{}' 。", f.info).to_owned(),
@@ -188,10 +170,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
             TokenInfo::Number(n) => {
                 let n = n.to_owned();
                 input.remove(0);
-                return Ok(Box::new(ASTNode::NUmber(Number {
-                    is_pos: true,
-                    value: n,
-                })));
+                return Ok(Box::new(ASTNode::Number(true, n)));
             }
             TokenInfo::Symbol(SymbolType::Add) => {
                 if let Some(f) = input.get(1) {
@@ -199,10 +178,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                         let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(Box::new(ASTNode::NUmber(Number {
-                            is_pos: true,
-                            value: n,
-                        })));
+                        return Ok(Box::new(ASTNode::Number(true, n)));
                     }
                 }
                 return Err(ParseErr {
@@ -216,10 +192,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                         let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(Box::new(ASTNode::NUmber(Number {
-                            is_pos: false,
-                            value: n,
-                        })));
+                        return Ok(Box::new(ASTNode::Number(false, n)));
                     }
                 }
                 return Err(ParseErr {
