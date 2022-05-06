@@ -1,57 +1,88 @@
 use crate::token::*;
 
+use bigdecimal::BigDecimal;
+type Num = BigDecimal;
+
 #[derive(Debug)]
 pub struct ParseErr {
     pub reason: String,
     pub position: usize,
 }
+#[derive(Debug)]
+pub struct ASTRoot {
+    pub root: Box<ASTNode>,
+}
+#[derive(Debug)]
+pub enum ASTNode {
+    Expression(Expression),
+    NUmber(Number),
+}
+#[derive(Debug)]
+pub struct Expression {
+    pub left: Box<ASTNode>,
+    pub func: FuncType,
+    pub right: Box<ASTNode>,
+}
+#[derive(Debug)]
+pub enum FuncType {
+    Add, // 加
+    Sub, // 减
+    Mul, // 乘
+    Div, // 除
+}
+#[derive(Debug)]
+pub struct Number {
+    pub is_pos: bool,
+    pub value: Num,
+}
 
-pub fn s(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+pub fn s(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
     let re = a(input);
     if re.is_err() {
-        return re;
+        return Err(re.err().unwrap());
     }
     if input.is_empty() {
-        return Ok(());
+        return Ok(ASTRoot { root: re.unwrap() });
     } else {
         return Err(ParseErr {
             reason: "有额外的输入！".to_owned(),
-            position: 0,
+            position: input[0].position,
         });
     }
 }
 
-fn a(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn a(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
     let re = m(input);
     if re.is_err() {
         return re;
     }
-    a1(input)
+    let mut re = re.unwrap();
+    while !input.is_empty() {
+        let op = o1(input);
+        if op.is_err() {
+            return Ok(re);
+        }
+        let right = m(input);
+        if right.is_err() {
+            return Ok(re);
+        }
+        re = Box::new(ASTNode::Expression(Expression {
+            left: re,
+            func: op.unwrap(),
+            right: right.unwrap(),
+        }));
+    }
+    Ok(re)
 }
 
-fn a1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
-    if input.is_empty() {
-        return Ok(());
-    }
-    let re = o1(input);
-    if re.is_err() {
-        return Ok(());
-    }
-    let re = m(input);
-    if re.is_err() {
-        return re;
-    }
-    a1(input)
-}
-
-fn o1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn o1(input: &mut Vec<Token>) -> Result<FuncType, ParseErr> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Add) = f.info {
             input.remove(0);
-            return Ok(());
+            return Ok(FuncType::Add);
         } else if let TokenInfo::Symbol(SymbolType::Sub) = f.info {
             input.remove(0);
-            return Ok(());
+            return Ok(FuncType::Sub);
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 + 或 - ，却得到了 '{}' 。", f.info).to_owned(),
@@ -66,37 +97,38 @@ fn o1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
     }
 }
 
-fn m(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn m(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
     let re = at(input);
     if re.is_err() {
         return re;
     }
-    m1(input)
+    let mut re = re.unwrap();
+    while !input.is_empty() {
+        let op = o2(input);
+        if op.is_err() {
+            return Ok(re);
+        }
+        let right = at(input);
+        if right.is_err() {
+            return Ok(re);
+        }
+        re = Box::new(ASTNode::Expression(Expression {
+            left: re,
+            func: op.unwrap(),
+            right: right.unwrap(),
+        }));
+    }
+    Ok(re)
 }
 
-fn m1(input: &mut Vec<Token>) -> Result<(), ParseErr> {
-    if input.is_empty() {
-        return Ok(());
-    }
-    let re = o2(input);
-    if re.is_err() {
-        return Ok(());
-    }
-    let re = at(input);
-    if re.is_err() {
-        return re;
-    }
-    m1(input)
-}
-
-fn o2(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn o2(input: &mut Vec<Token>) -> Result<FuncType, ParseErr> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Mul) = f.info {
             input.remove(0);
-            return Ok(());
+            return Ok(FuncType::Mul);
         } else if let TokenInfo::Symbol(SymbolType::Div) = f.info {
             input.remove(0);
-            return Ok(());
+            return Ok(FuncType::Div);
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 * 或 / ，却得到了 '{}' 。", f.info).to_owned(),
@@ -111,7 +143,7 @@ fn o2(input: &mut Vec<Token>) -> Result<(), ParseErr> {
     }
 }
 
-fn at(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn at(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
     let re = num(input);
     if re.is_err() {
         if let Some(f) = input.get(0) {
@@ -125,7 +157,8 @@ fn at(input: &mut Vec<Token>) -> Result<(), ParseErr> {
                 if let Some(f) = input.get(0) {
                     if let TokenInfo::Symbol(SymbolType::RightBracket) = f.info {
                         input.remove(0);
-                        return Ok(());
+                        let n = re.unwrap();
+                        return Ok(n);
                     } else {
                         return Err(ParseErr {
                             reason: format!("期望获得 ) ，却得到了 '{}' 。", f.info).to_owned(),
@@ -149,19 +182,27 @@ fn at(input: &mut Vec<Token>) -> Result<(), ParseErr> {
     return re;
 }
 
-fn num(input: &mut Vec<Token>) -> Result<(), ParseErr> {
+fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
     if let Some(f) = input.get(0) {
-        match f.info {
-            TokenInfo::Number(_) => {
+        match &f.info {
+            TokenInfo::Number(n) => {
+                let n = n.to_owned();
                 input.remove(0);
-                return Ok(());
+                return Ok(Box::new(ASTNode::NUmber(Number {
+                    is_pos: true,
+                    value: n,
+                })));
             }
             TokenInfo::Symbol(SymbolType::Add) => {
                 if let Some(f) = input.get(1) {
-                    if let TokenInfo::Number(_) = f.info {
+                    if let TokenInfo::Number(n) = &f.info {
+                        let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(());
+                        return Ok(Box::new(ASTNode::NUmber(Number {
+                            is_pos: true,
+                            value: n,
+                        })));
                     }
                 }
                 return Err(ParseErr {
@@ -171,10 +212,14 @@ fn num(input: &mut Vec<Token>) -> Result<(), ParseErr> {
             }
             TokenInfo::Symbol(SymbolType::Sub) => {
                 if let Some(f) = input.get(1) {
-                    if let TokenInfo::Number(_) = f.info {
+                    if let TokenInfo::Number(n) = &f.info {
+                        let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(());
+                        return Ok(Box::new(ASTNode::NUmber(Number {
+                            is_pos: false,
+                            value: n,
+                        })));
                     }
                 }
                 return Err(ParseErr {
