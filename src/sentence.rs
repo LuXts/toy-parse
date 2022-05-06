@@ -2,12 +2,19 @@ use crate::token::*;
 
 use bigdecimal::BigDecimal;
 type Num = BigDecimal;
-
+type Position = usize;
 #[derive(Debug)]
 pub struct ParseErr {
     pub reason: String,
-    pub position: usize,
+    pub err_type: ParseErrType,
 }
+#[derive(Debug)]
+pub enum ParseErrType {
+    Unexpected(Position),
+    Insufficient,
+    Redundant(Position),
+}
+
 #[derive(Debug)]
 pub struct ASTRoot {
     pub root: Box<ASTNode>,
@@ -26,7 +33,7 @@ pub enum OperatorType {
     Div, // 除
 }
 
-pub fn s(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
+pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
     let re = a(input);
     if re.is_err() {
         return Err(re.err().unwrap());
@@ -36,7 +43,7 @@ pub fn s(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
     } else {
         return Err(ParseErr {
             reason: "有额外的输入！".to_owned(),
-            position: input[0].position,
+            err_type: ParseErrType::Redundant(input[0].position),
         });
     }
 }
@@ -72,13 +79,13 @@ fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 + 或 - ，却得到了 '{}' 。", f.info).to_owned(),
-                position: f.position,
+                err_type: ParseErrType::Unexpected(f.position),
             });
         }
     } else {
         return Err(ParseErr {
             reason: "期望获得 + 或 - ，却意外终止。".to_owned(),
-            position: 0,
+            err_type: ParseErrType::Insufficient,
         });
     }
 }
@@ -114,13 +121,13 @@ fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
         } else {
             return Err(ParseErr {
                 reason: format!("期望获得 * 或 / ，却得到了 '{}' 。", f.info).to_owned(),
-                position: f.position,
+                err_type: ParseErrType::Unexpected(f.position),
             });
         }
     } else {
         return Err(ParseErr {
             reason: "期望获得 * 或 / ，却意外终止。".to_owned(),
-            position: 0,
+            err_type: ParseErrType::Insufficient,
         });
     }
 }
@@ -144,19 +151,19 @@ fn at(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                     } else {
                         return Err(ParseErr {
                             reason: format!("期望获得 ) ，却得到了 '{}' 。", f.info).to_owned(),
-                            position: f.position,
+                            err_type: ParseErrType::Unexpected(f.position),
                         });
                     }
                 } else {
                     return Err(ParseErr {
                         reason: "期望获得 ) ，却意外终止。".to_owned(),
-                        position: 0,
+                        err_type: ParseErrType::Insufficient,
                     });
                 }
             } else {
                 return Err(ParseErr {
                     reason: format!("期望获得 ( 或数字，却得到了 '{}' 。", f.info).to_owned(),
-                    position: f.position,
+                    err_type: ParseErrType::Unexpected(f.position),
                 });
             }
         }
@@ -183,7 +190,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                 }
                 return Err(ParseErr {
                     reason: "期望获得数字，却意外终止。".to_owned(),
-                    position: 0,
+                    err_type: ParseErrType::Insufficient,
                 });
             }
             TokenInfo::Symbol(SymbolType::Sub) => {
@@ -197,20 +204,20 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                 }
                 return Err(ParseErr {
                     reason: "期望获得数字，却意外终止。".to_owned(),
-                    position: 0,
+                    err_type: ParseErrType::Insufficient,
                 });
             }
             _ => {
                 return Err(ParseErr {
-                    reason: format!("期望获得（+/-）数字，却得到了 '{}' 。", f.info).to_owned(),
-                    position: f.position,
+                    reason: format!("期望获得数字，却得到了 '{}' 。", f.info).to_owned(),
+                    err_type: ParseErrType::Unexpected(f.position),
                 });
             }
         }
     } else {
         return Err(ParseErr {
-            reason: "期望获得（+/-）数字，却意外终止。".to_owned(),
-            position: 0,
+            reason: "期望获得数字，却意外终止。".to_owned(),
+            err_type: ParseErrType::Insufficient,
         });
     }
 }

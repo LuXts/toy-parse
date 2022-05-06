@@ -79,7 +79,7 @@ pub fn parse_number_token(
     }
     match parse_number(&input[start_position..end_position]) {
         Ok(n) => Ok(Token {
-            position: (start_position + 1) as usize,
+            position: start_position,
             info: TokenInfo::Number(n),
             original: input[start_position..end_position].to_string(),
         }),
