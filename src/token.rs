@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 type Num = BigDecimal;
 
 // u8(C++ 中的 char) 和 TokenInfo 的对应表，包含了默认符号
@@ -16,7 +16,7 @@ static DEFAULE_TOKEN_LIST: Lazy<HashMap<u8, TokenInfo>> = Lazy::new(|| {
     data
 });
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub position: usize,
     pub info: TokenInfo,
@@ -28,6 +28,27 @@ pub enum TokenInfo {
     Number(Num),        // 数字
     Func(FuncType),     // 函数
     Symbol(SymbolType), // 符号
+}
+
+impl fmt::Display for TokenInfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TokenInfo::Symbol(symbol) => match symbol {
+                SymbolType::LeftBracket => write!(f, "("),
+                SymbolType::RightBracket => write!(f, ")"),
+                SymbolType::Blank => write!(f, "_"),
+            },
+            TokenInfo::Number(number) => {
+                write!(f, "{}", number)
+            }
+            TokenInfo::Func(func) => match func {
+                FuncType::Add => write!(f, "+"),
+                FuncType::Sub => write!(f, "-"),
+                FuncType::Mul => write!(f, "*"),
+                FuncType::Div => write!(f, "/"),
+            },
+        }
+    }
 }
 
 // 函数类型
