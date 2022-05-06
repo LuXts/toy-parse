@@ -94,24 +94,23 @@ pub fn parse_token(input: &str) -> Result<Vec<Token>, TokenParseErr> {
                 };
                 parsing_number = false;
             }
-            tokens.push(Token {
-                position: current_position,
-                info: token.clone(),
-                original: input[current_position..current_position + 1].to_owned(),
-            });
+            match token {
+                TokenInfo::Symbol(SymbolType::Blank) => {
+                    // 不解析空格
+                }
+                _ => {
+                    tokens.push(Token {
+                        position: current_position,
+                        info: token.clone(),
+                        original: input[current_position..current_position + 1].to_owned(),
+                    });
+                }
+            }
             parsed_position = current_position + 1;
         } else {
             parsing_number = true;
         }
     }
-    // 剔除空格 Token
-    tokens.retain(|e| {
-        if let TokenInfo::Symbol(SymbolType::Blank) = e.info {
-            false
-        } else {
-            true
-        }
-    });
     // 如果结束的时候还在解析数字状态，就把剩下的所有字符都丢进去解析。
     if parsing_number {
         match parse_number_token(input, parsed_position, input.len()) {
