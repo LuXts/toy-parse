@@ -1,14 +1,16 @@
+use std::rc::Rc;
+
 use crate::token::*;
 
 use bigdecimal::BigDecimal;
 type Num = BigDecimal;
 type Position = usize;
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ParseErr {
     pub reason: String,
     pub err_type: ParseErrType,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ParseErrType {
     Unexpected(Position),
     Insufficient,
@@ -17,15 +19,15 @@ pub enum ParseErrType {
 
 #[derive(Debug)]
 pub struct ASTRoot {
-    pub root: Box<ASTNode>,
+    pub data: Rc<ASTNode>,
 }
 #[derive(Debug)]
 pub enum ASTNode {
-    Expression(Box<ASTNode>, OperatorType, Box<ASTNode>),
+    Expression(Rc<ASTNode>, OperatorType, Rc<ASTNode>),
     Number(bool, Num),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum OperatorType {
     Add, // 加
     Sub, // 减
@@ -39,7 +41,7 @@ pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
         return Err(re.err().unwrap());
     }
     if input.is_empty() {
-        return Ok(ASTRoot { root: re.unwrap() });
+        return Ok(ASTRoot { data: re.unwrap() });
     } else {
         return Err(ParseErr {
             reason: "有额外的输入！".to_owned(),
@@ -48,7 +50,7 @@ pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
     }
 }
 
-fn a(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
+fn a(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     let re = m(input);
     if re.is_err() {
         return re;
@@ -59,16 +61,22 @@ fn a(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
         if op.is_err() {
             return Ok(re);
         }
+        if input.is_empty() {
+            return Err(ParseErr {
+                reason: "期望获得数字 ，却意外终止。".to_owned(),
+                err_type: ParseErrType::Insufficient,
+            });
+        }
         let right = m(input);
         if right.is_err() {
             return Ok(re);
         }
-        re = Box::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
+        re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
     Ok(re)
 }
 
-fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
+fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ()> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Add) = f.info {
             input.remove(0);
@@ -77,20 +85,14 @@ fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
             input.remove(0);
             return Ok(OperatorType::Sub);
         } else {
-            return Err(ParseErr {
-                reason: format!("期望获得 + 或 - ，却得到了 '{}' 。", f.info).to_owned(),
-                err_type: ParseErrType::Unexpected(f.position),
-            });
+            return Err(());
         }
     } else {
-        return Err(ParseErr {
-            reason: "期望获得 + 或 - ，却意外终止。".to_owned(),
-            err_type: ParseErrType::Insufficient,
-        });
+        return Err(());
     }
 }
 
-fn m(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
+fn m(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     let re = at(input);
     if re.is_err() {
         return re;
@@ -101,16 +103,22 @@ fn m(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
         if op.is_err() {
             return Ok(re);
         }
+        if input.is_empty() {
+            return Err(ParseErr {
+                reason: "期望获得数字 ，却意外终止。".to_owned(),
+                err_type: ParseErrType::Insufficient,
+            });
+        }
         let right = at(input);
         if right.is_err() {
             return Ok(re);
         }
-        re = Box::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
+        re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
     Ok(re)
 }
 
-fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
+fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ()> {
     if let Some(f) = input.first() {
         if let TokenInfo::Symbol(SymbolType::Mul) = f.info {
             input.remove(0);
@@ -119,20 +127,14 @@ fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ParseErr> {
             input.remove(0);
             return Ok(OperatorType::Div);
         } else {
-            return Err(ParseErr {
-                reason: format!("期望获得 * 或 / ，却得到了 '{}' 。", f.info).to_owned(),
-                err_type: ParseErrType::Unexpected(f.position),
-            });
+            return Err(());
         }
     } else {
-        return Err(ParseErr {
-            reason: "期望获得 * 或 / ，却意外终止。".to_owned(),
-            err_type: ParseErrType::Insufficient,
-        });
+        return Err(());
     }
 }
 
-fn at(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
+fn at(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     let re = num(input);
     if re.is_err() {
         if let Some(f) = input.get(0) {
@@ -142,7 +144,6 @@ fn at(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                 if re.is_err() {
                     return re;
                 }
-
                 if let Some(f) = input.get(0) {
                     if let TokenInfo::Symbol(SymbolType::RightBracket) = f.info {
                         input.remove(0);
@@ -171,13 +172,13 @@ fn at(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
     return re;
 }
 
-fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
+fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     if let Some(f) = input.get(0) {
         match &f.info {
             TokenInfo::Number(n) => {
                 let n = n.to_owned();
                 input.remove(0);
-                return Ok(Box::new(ASTNode::Number(true, n)));
+                return Ok(Rc::new(ASTNode::Number(true, n)));
             }
             TokenInfo::Symbol(SymbolType::Add) => {
                 if let Some(f) = input.get(1) {
@@ -185,7 +186,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                         let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(Box::new(ASTNode::Number(true, n)));
+                        return Ok(Rc::new(ASTNode::Number(true, n)));
                     }
                 }
                 return Err(ParseErr {
@@ -199,7 +200,7 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
                         let n = n.to_owned();
                         input.remove(0);
                         input.remove(0);
-                        return Ok(Box::new(ASTNode::Number(false, n)));
+                        return Ok(Rc::new(ASTNode::Number(false, n)));
                     }
                 }
                 return Err(ParseErr {
@@ -219,5 +220,56 @@ fn num(input: &mut Vec<Token>) -> Result<Box<ASTNode>, ParseErr> {
             reason: "期望获得数字，却意外终止。".to_owned(),
             err_type: ParseErrType::Insufficient,
         });
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::sentence::parse_sentence;
+
+    use super::parse_token;
+
+    #[test]
+    fn parse_test_success() {
+        // 测试符合语法的内容
+        let input_vec = vec![
+            "56+88-9999",
+            "1e9",
+            "1.0",
+            ".0",
+            ".0+1",
+            "3-2",
+            "3--2",
+            "3-(-2)",
+            "-2+3",
+            "-2-2",
+            "(12)+1",
+            "2*3",
+            "2*3-1",
+            "3-2*1",
+            "3*4*5/2",
+            "3*4*5/(-2)",
+        ];
+        for i in 0..input_vec.len() {
+            let re = parse_token(input_vec[i]);
+            assert!(re.is_ok());
+            let re = parse_sentence(&mut re.unwrap());
+            assert!(re.is_ok(), "input: {}", input_vec[i]);
+        }
+    }
+
+    #[test]
+    fn parse_test_fail() {
+        // 测试不符合语法的内容
+        let input_vec = vec![
+            "56+", "1e9-", "*1.0", "(", ")", "()", "(((2)", "3**3", "4-*2", "45(+6)", "4 5", "++",
+            "--15", "-(5)", "-(+5)", "++++++1", "+1-",
+        ];
+        for i in 0..input_vec.len() {
+            let re = parse_token(input_vec[i]);
+            assert!(re.is_ok());
+            let re = parse_sentence(&mut re.unwrap());
+            assert!(re.is_err(), "input: {}", input_vec[i]);
+        }
     }
 }
