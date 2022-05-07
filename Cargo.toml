@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 bigdecimal = "0.3"
 once_cell = "1"
+slint = "0.2.1"
+
+[build-dependencies]
+slint-build = "0.2.1"
