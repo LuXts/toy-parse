@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, fmt, rc::Rc};
 
 use crate::sentence::*;
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 type Num = BigDecimal;
 
 pub enum TraverseItem {
@@ -33,7 +33,7 @@ impl fmt::Display for TraverseItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TraverseItem::Operator(op) => write!(f, "{}", op),
-            TraverseItem::Number(n) => write!(f, "{}", n),
+            TraverseItem::Number(n) => write!(f, "{}", n.to_f64().unwrap()),
         }
     }
 }

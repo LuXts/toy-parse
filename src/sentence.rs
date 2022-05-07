@@ -12,7 +12,7 @@ pub struct ParseErr {
 }
 #[derive(Debug, Clone)]
 pub enum ParseErrType {
-    Unexpected(Position),
+    Unexpected(Token),
     Insufficient,
     Redundant(Position),
 }
@@ -44,7 +44,7 @@ pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
         return Ok(ASTRoot { data: re.unwrap() });
     } else {
         return Err(ParseErr {
-            reason: "有额外的输入！".to_owned(),
+            reason: "有未能解析的输入".to_owned(),
             err_type: ParseErrType::Redundant(input[0].position),
         });
     }
@@ -57,18 +57,20 @@ fn a(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     }
     let mut re = re.unwrap();
     while !input.is_empty() {
+        let temp = input[0].to_owned();
         let op = o1(input);
         if op.is_err() {
             return Ok(re);
         }
         if input.is_empty() {
             return Err(ParseErr {
-                reason: "期望获得数字 ，却意外终止。".to_owned(),
+                reason: "期望获得数字 ，却意外终止".to_owned(),
                 err_type: ParseErrType::Insufficient,
             });
         }
         let right = m(input);
         if right.is_err() {
+            input.insert(0, temp);
             return Ok(re);
         }
         re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
@@ -99,18 +101,20 @@ fn m(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     }
     let mut re = re.unwrap();
     while !input.is_empty() {
+        let temp = input[0].to_owned();
         let op = o2(input);
         if op.is_err() {
             return Ok(re);
         }
         if input.is_empty() {
             return Err(ParseErr {
-                reason: "期望获得数字 ，却意外终止。".to_owned(),
+                reason: "期望获得数字 ，却意外终止".to_owned(),
                 err_type: ParseErrType::Insufficient,
             });
         }
         let right = at(input);
         if right.is_err() {
+            input.insert(0, temp);
             return Ok(re);
         }
         re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
@@ -151,20 +155,20 @@ fn at(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                         return Ok(n);
                     } else {
                         return Err(ParseErr {
-                            reason: format!("期望获得 ) ，却得到了 '{}' 。", f.info).to_owned(),
-                            err_type: ParseErrType::Unexpected(f.position),
+                            reason: format!("期望获得 ) ，却得到了 '{}' ", f.info).to_owned(),
+                            err_type: ParseErrType::Unexpected(f.to_owned()),
                         });
                     }
                 } else {
                     return Err(ParseErr {
-                        reason: "期望获得 ) ，却意外终止。".to_owned(),
+                        reason: "期望获得 ) ，却意外终止".to_owned(),
                         err_type: ParseErrType::Insufficient,
                     });
                 }
             } else {
                 return Err(ParseErr {
-                    reason: format!("期望获得 ( 或数字，却得到了 '{}' 。", f.info).to_owned(),
-                    err_type: ParseErrType::Unexpected(f.position),
+                    reason: format!("期望获得 ( 或数字，却得到了 '{}' ", f.info).to_owned(),
+                    err_type: ParseErrType::Unexpected(f.to_owned()),
                 });
             }
         }
@@ -190,7 +194,7 @@ fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                     }
                 }
                 return Err(ParseErr {
-                    reason: "期望获得数字，却意外终止。".to_owned(),
+                    reason: "期望获得数字，却意外终止".to_owned(),
                     err_type: ParseErrType::Insufficient,
                 });
             }
@@ -204,20 +208,20 @@ fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                     }
                 }
                 return Err(ParseErr {
-                    reason: "期望获得数字，却意外终止。".to_owned(),
+                    reason: "期望获得数字，却意外终止".to_owned(),
                     err_type: ParseErrType::Insufficient,
                 });
             }
             _ => {
                 return Err(ParseErr {
-                    reason: format!("期望获得数字，却得到了 '{}' 。", f.info).to_owned(),
-                    err_type: ParseErrType::Unexpected(f.position),
+                    reason: format!("期望获得数字，却得到了 '{}' ", f.info).to_owned(),
+                    err_type: ParseErrType::Unexpected(f.to_owned()),
                 });
             }
         }
     } else {
         return Err(ParseErr {
-            reason: "期望获得数字，却意外终止。".to_owned(),
+            reason: "期望获得数字，却意外终止".to_owned(),
             err_type: ParseErrType::Insufficient,
         });
     }

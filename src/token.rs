@@ -1,4 +1,4 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, fmt};
 type Num = BigDecimal;
@@ -54,7 +54,7 @@ impl fmt::Display for TokenInfo {
                 SymbolType::Div => write!(f, "/"),
             },
             TokenInfo::Number(number) => {
-                write!(f, "{}", number)
+                write!(f, "{}", number.to_f64().unwrap())
             }
         }
     }
