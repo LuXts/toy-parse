@@ -5,6 +5,7 @@ import {
 
 
 MainWindow := Window {
+    icon: @image-url("Icon.png");
     min-width: 800px;
     min-height: 550px;
     preferred-width: 800px;
@@ -52,23 +53,25 @@ MainWindow := Window {
                 horizontal-alignment: right;
             }
             Rectangle {
-                padding: 10px;
-                height: {window-height*30%};
+                height: {window-height * 0.3};
+                width: InputEdit.width;
                 border-width: 1px;
                 border-radius: 4px;
                 border-color: input-border-color;
-                re-polish:= Text {
-                    font-size: 14px;
-                    text: "";
-                    wrap: word-wrap;
-                    width: parent.width;
-                    vertical-stretch: 0.5;
+                HorizontalLayout{
+                    padding: 5px;
+                    re-polish:= Text {
+                        font-size: 14px;
+                        text: "";
+                        wrap: word-wrap;
+                        width: {InputEdit.width - 10px};
+                    }
                 }
             } 
             Rectangle{width: 80px;}
         }
         HorizontalLayout{
-            vertical-stretch: 0.5;
+            vertical-stretch: 0.7;
             spacing: 10px;
             Text {
                 width: 120px;
@@ -78,16 +81,19 @@ MainWindow := Window {
                 horizontal-alignment: right;
             }
             Rectangle {
-                padding: 10px;
+                width: InputEdit.width;
                 border-width: 1px;
                 border-radius: 4px;
                 border-color: input-border-color;
-                output:= Text {
-                    font-size: 14px;
-                    text: "";
-                    wrap: word-wrap;
-                    width: parent.width;
-                    horizontal-stretch: 1;
+                HorizontalLayout{
+                    padding: 5px;
+                    output:= Text {
+                        font-size: 14px;
+                        text: " ";
+                        wrap: word-wrap;
+                        width: {InputEdit.width - 10px};
+                        horizontal-stretch: 1;
+                    }
                 }
             }
             Rectangle{width: 80px;}
@@ -98,7 +104,7 @@ MainWindow := Window {
             Rectangle{width: 120px;}
             tip := Text {
                 font-size: 14px;
-                text: "只承认所有直接跟着数字的 - 符号为负号如 -5 ，不承认 -(5) 的形式。\n允许输入科学记数法如 1e3 1.9E2 等。小数可简写为 .78 ，等价于 0.78 。\n内部计算使用精确数 (BigDecimal) 运算而不是浮点数，避免出现浮点错误和 int 溢出。\n运算精度为小数点后 2 的 64 次方 位，显示输出精度为小数点后 15 位有效数字。";
+                text: "只承认所有直接跟着数字的 - 符号为负号，如 -5 ，不承认 -(5) 的形式。\n负号将以 @ 符号于逆波兰式中表现，以避免和减号 - 的歧义。\n允许输入科学记数法如 1e3 1.9E2 等。小数可简写为 .78 ，等价于 0.78 。\n内部计算使用精确数 (BigDecimal) 运算而不是浮点数，避免出现浮点错误和 int 溢出。\n运算精度为小数点后 2 的 64 次方 位，显示输出精度为小数点后 15 位有效数字。";
                 wrap: word-wrap;
                 horizontal-stretch: 1;
             }

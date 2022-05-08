@@ -1,3 +1,11 @@
+/*
+ * @Author: LuXts
+ * @Date: 2022-05-07 19:42:56
+ * @LastEditTime: 2022-05-08 23:01:02
+ * @LastEditors: LuXts
+ * @Description:
+ * @FilePath: \toy-parse\src\main.rs
+ */
 #![windows_subsystem = "windows"]
 
 use crate::{sentence::parse_sentence, token::parse_token, translation::translate_ast};
@@ -33,7 +41,7 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                             ),
                         ));
                     }
-                    Err(e) => return Err(format!("计算结果为: {} !", e)),
+                    Err(e) => return Ok((out, format!("计算结果为: {} ！", e))),
                 }
             }
             Err(e) => match e.err_type {
@@ -84,7 +92,7 @@ fn main() {
         }
         Err(e) => {
             main_window.set_output_content(format!("错误: {}", e).into());
-            main_window.set_re_polish_content("".into());
+            main_window.set_re_polish_content("解析表达式失败！".into());
         }
     });
     main_window2.run();
