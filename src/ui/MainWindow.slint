@@ -5,73 +5,102 @@ import {
 
 
 MainWindow := Window {
-    min-width: 700px;
-    min-height: 400px;
-    preferred-width: 700px;
-    preferred-height: 400px;
-    default-font-size:16px;
-    title:"四则运算解释器";
+    min-width: 800px;
+    min-height: 550px;
+    preferred-width: 800px;
+    preferred-height: 550px;
+    default-font-size: 16px;
+    title: "四则运算编译解释器";
     property <string> re-polish-content <=> re-polish.text;
     property <string> output-content <=> output.text;
+    property input-border-color <=> output.color;
+    property window-height <=> height;
     callback input(string);
-    GridBox{
-        Row{
+    VerticalLayout{
+        padding: 10px;
+        spacing: 10px;
+        HorizontalLayout{
+            vertical-stretch: 0;
+            max-height: 40px;
+            spacing: 10px;
             Text {
-                max-height: 30px;
-                preferred-width: 180px;
+                width: 120px;
                 text: "四则运算输入:";
                 font-weight: 600;
                 vertical-alignment: center;
                 horizontal-alignment: right;
             }
-            HorizontalLayout{
-                max-height: 50px;
-                InputEdit:= LineEdit {
-                    horizontal_stretch: 1;
-                    placeholder-text:"请输入表达式！";
-                }
+            InputEdit:= LineEdit {
+                horizontal_stretch: 1;
+                placeholder-text:"请输入表达式！";
+                edited => { root.input(InputEdit.text) }
             }
             Button {
+                width: 80px;
                 text: "解析";
                 clicked => {root.input(InputEdit.text) }
             }
-
         }
-        Row{
+        HorizontalLayout{
+            vertical-stretch: 0.5;
+            spacing: 10px;
             Text {
+                width: 120px;
                 font-weight: 600;
                 text: "逆波兰式:";
                 vertical-alignment: top;
                 horizontal-alignment: right;
             }
-            HorizontalLayout{
-                Rectangle {
-                    preferred-height: 50px;
-                    background: #EFEFEF20;
-                        re-polish:= Text {
-                            font-size: 14px;
-                            text: "";
-                            wrap: word-wrap;
-                            width: parent.width;
-                        }
+            Rectangle {
+                padding: 10px;
+                height: {window-height*30%};
+                border-width: 1px;
+                border-radius: 4px;
+                border-color: input-border-color;
+                re-polish:= Text {
+                    font-size: 14px;
+                    text: "";
+                    wrap: word-wrap;
+                    width: parent.width;
+                    vertical-stretch: 0.5;
                 }
-            }
-
+            } 
+            Rectangle{width: 80px;}
         }
-        Row{
+        HorizontalLayout{
+            vertical-stretch: 0.5;
+            spacing: 10px;
             Text {
+                width: 120px;
                 font-weight: 600;
                 text: "输出:";
                 vertical-alignment: top;
                 horizontal-alignment: right;
             }
-            HorizontalLayout{
+            Rectangle {
+                padding: 10px;
+                border-width: 1px;
+                border-radius: 4px;
+                border-color: input-border-color;
                 output:= Text {
                     font-size: 14px;
                     text: "";
                     wrap: word-wrap;
+                    width: parent.width;
                     horizontal-stretch: 1;
                 }
+            }
+            Rectangle{width: 80px;}
+        }
+        HorizontalLayout{
+            vertical-stretch: 0;
+            spacing: 10px;
+            Rectangle{width: 120px;}
+            tip := Text {
+                font-size: 14px;
+                text: "只承认所有直接跟着数字的 - 符号为负号如 -5 ，不承认 -(5) 的形式。\n允许输入科学记数法如 1e3 1.9E2 等。小数可简写为 .78 ，等价于 0.78 。\n内部计算使用精确数 (BigDecimal) 运算而不是浮点数，避免出现浮点错误和 int 溢出。\n运算精度为小数点后 2 的 64 次方 位，显示输出精度为小数点后 15 位有效数字。";
+                wrap: word-wrap;
+                horizontal-stretch: 1;
             }
         }
     }

@@ -1,13 +1,12 @@
-use std::rc::Rc;
+#![windows_subsystem = "windows"]
 
 use crate::{sentence::parse_sentence, token::parse_token, translation::translate_ast};
+use std::rc::Rc;
 
 mod calculate;
 mod sentence;
 mod token;
 mod translation;
-
-use bigdecimal::ToPrimitive;
 
 fn parse_and_run(input: &str) -> Result<(String, String), String> {
     //println!("输入字符串为    ||    '{}'", &input);
@@ -28,8 +27,11 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                     Ok(n) => {
                         return Ok((
                             out,
-                            format!("计算结果为: {} 。", n.to_f64().unwrap()).to_owned(),
-                        ))
+                            format!(
+                                "计算结果为: {} 。",
+                                n.with_scale(15).normalized().to_string()
+                            ),
+                        ));
                     }
                     Err(e) => return Err(format!("计算结果为: {} !", e)),
                 }
@@ -71,87 +73,7 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
     }
 }
 
-slint::slint! {
-import {
-    ComboBox, VerticalBox, HorizontalBox, GridBox, Button,
-    LineEdit, ListView, GroupBox, CheckBox,Slider,TextEdit
-} from "std-widgets.slint";
-
-
-MainWindow := Window {
-    min-width: 700px;
-    min-height: 400px;
-    preferred-width: 700px;
-    preferred-height: 400px;
-    default-font-size:16px;
-    title:"四则运算解释器";
-    property <string> re-polish-content <=> re-polish.text;
-    property <string> output-content <=> output.text;
-    callback input(string);
-    GridBox{
-        Row{
-            Text {
-                max-height: 30px;
-                preferred-width: 180px;
-                text: "四则运算输入:";
-                font-weight: 600;
-                vertical-alignment: center;
-                horizontal-alignment: right;
-            }
-            HorizontalLayout{
-                max-height: 50px;
-                InputEdit:= LineEdit {
-                    horizontal_stretch: 1;
-                    placeholder-text:"请输入表达式！";
-                }
-            }
-            Button {
-                text: "解析";
-                clicked => {root.input(InputEdit.text) }
-            }
-
-        }
-        Row{
-            Text {
-                font-weight: 600;
-                text: "逆波兰式:";
-                vertical-alignment: top;
-                horizontal-alignment: right;
-            }
-            HorizontalLayout{
-                Rectangle {
-                    preferred-height: 50px;
-                    background: #EFEFEF20;
-                        re-polish:= Text {
-                            font-size: 14px;
-                            text: "";
-                            wrap: word-wrap;
-                            width: parent.width;
-                        }
-                }
-            }
-
-        }
-        Row{
-            Text {
-                font-weight: 600;
-                text: "输出:";
-                vertical-alignment: top;
-                horizontal-alignment: right;
-            }
-            HorizontalLayout{
-                output:= Text {
-                    font-size: 14px;
-                    text: "";
-                    wrap: word-wrap;
-                    horizontal-stretch: 1;
-                }
-            }
-        }
-    }
-}
-}
-
+slint::include_modules!();
 fn main() {
     let main_window = Rc::new(MainWindow::new());
     let main_window2 = main_window.clone();
