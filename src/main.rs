@@ -85,14 +85,21 @@ slint::include_modules!();
 fn main() {
     let main_window = Rc::new(MainWindow::new());
     let main_window2 = main_window.clone();
-    main_window2.on_input(move |input| match parse_and_run(input.as_str()) {
-        Ok((re_polish, output)) => {
-            main_window.set_output_content(output.into());
-            main_window.set_re_polish_content(re_polish.into());
-        }
-        Err(e) => {
-            main_window.set_output_content(format!("错误: {}", e).into());
-            main_window.set_re_polish_content("解析表达式失败！".into());
+    main_window2.on_input(move |input| {
+        if !input.is_empty() {
+            match parse_and_run(input.as_str()) {
+                Ok((re_polish, output)) => {
+                    main_window.set_output_content(output.into());
+                    main_window.set_re_polish_content(re_polish.into());
+                }
+                Err(e) => {
+                    main_window.set_output_content(format!("错误: {}", e).into());
+                    main_window.set_re_polish_content("解析表达式失败！".into());
+                }
+            }
+        } else {
+            main_window.set_output_content("".into());
+            main_window.set_re_polish_content("".into());
         }
     });
     main_window2.run();
