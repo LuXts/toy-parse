@@ -184,29 +184,22 @@ fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                 input.remove(0);
                 return Ok(Rc::new(ASTNode::Number(true, n)));
             }
-            TokenInfo::Symbol(SymbolType::Add) => {
-                if let Some(f) = input.get(1) {
-                    if let TokenInfo::Number(n) = &f.info {
-                        let n = n.to_owned();
-                        input.remove(0);
-                        input.remove(0);
-                        return Ok(Rc::new(ASTNode::Number(true, n)));
+            TokenInfo::Symbol(SymbolType::LeftBracket) => {
+                if input.len() >= 4 {
+                    if let TokenInfo::Symbol(SymbolType::Sub) = input[1].info {
+                        if let TokenInfo::Number(n) = &input[2].info {
+                            if let TokenInfo::Symbol(SymbolType::RightBracket) = input[3].info {
+                                let n = n.to_owned();
+                                input.remove(0);
+                                input.remove(0);
+                                input.remove(0);
+                                input.remove(0);
+                                return Ok(Rc::new(ASTNode::Number(false, n)));
+                            }
+                        }
                     }
                 }
-                return Err(ParseErr {
-                    reason: "期望获得数字，却意外终止".to_owned(),
-                    err_type: ParseErrType::Insufficient,
-                });
-            }
-            TokenInfo::Symbol(SymbolType::Sub) => {
-                if let Some(f) = input.get(1) {
-                    if let TokenInfo::Number(n) = &f.info {
-                        let n = n.to_owned();
-                        input.remove(0);
-                        input.remove(0);
-                        return Ok(Rc::new(ASTNode::Number(false, n)));
-                    }
-                }
+
                 return Err(ParseErr {
                     reason: "期望获得数字，却意外终止".to_owned(),
                     err_type: ParseErrType::Insufficient,
@@ -243,10 +236,8 @@ mod test {
             ".0",
             ".0+1",
             "3-2",
-            "3--2",
             "3-(-2)",
-            "-2+3",
-            "-2-2",
+            "(-2)+3",
             "(12)+1",
             "2*3",
             "2*3-1",
@@ -267,7 +258,7 @@ mod test {
         // 测试不符合语法的内容
         let input_vec = vec![
             "56+", "1e9-", "*1.0", "(", ")", "()", "(((2)", "3**3", "4-*2", "45(+6)", "4 5", "++",
-            "--15", "-(5)", "-(+5)", "++++++1", "+1-",
+            "--15", "-(5)", "-(+5)", "++++++1", "+1-", "-2", "+3", "3++2", "3--2",
         ];
         for i in 0..input_vec.len() {
             let re = parse_token(input_vec[i]);
