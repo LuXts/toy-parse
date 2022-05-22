@@ -51,7 +51,7 @@ pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
 }
 
 fn a(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
-    let re = m(input);
+    let re = m(input, true);
     if re.is_err() {
         return re;
     }
@@ -68,7 +68,7 @@ fn a(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                 err_type: ParseErrType::Insufficient,
             });
         }
-        let right = m(input);
+        let right = m(input, false);
         if right.is_err() {
             input.insert(0, temp);
             return Ok(re);
@@ -94,8 +94,8 @@ fn o1(input: &mut Vec<Token>) -> Result<OperatorType, ()> {
     }
 }
 
-fn m(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
-    let re = at(input);
+fn m(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
+    let re = at(input, is_first);
     if re.is_err() {
         return re;
     }
@@ -112,7 +112,7 @@ fn m(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                 err_type: ParseErrType::Insufficient,
             });
         }
-        let right = at(input);
+        let right = at(input, is_first);
         if right.is_err() {
             input.insert(0, temp);
             return Ok(re);
@@ -138,8 +138,8 @@ fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ()> {
     }
 }
 
-fn at(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
-    let re = num(input);
+fn at(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
+    let re = num(input, is_first);
     if re.is_err() {
         if let Some(f) = input.get(0) {
             if let TokenInfo::Symbol(SymbolType::LeftBracket) = f.info {
@@ -176,7 +176,7 @@ fn at(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     return re;
 }
 
-fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
+fn num(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
     if let Some(f) = input.get(0) {
         match &f.info {
             TokenInfo::Number(n) => {
@@ -184,22 +184,22 @@ fn num(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
                 input.remove(0);
                 return Ok(Rc::new(ASTNode::Number(true, n)));
             }
-            TokenInfo::Symbol(SymbolType::LeftBracket) => {
-                if input.len() >= 4 {
-                    if let TokenInfo::Symbol(SymbolType::Sub) = input[1].info {
-                        if let TokenInfo::Number(n) = &input[2].info {
-                            if let TokenInfo::Symbol(SymbolType::RightBracket) = input[3].info {
-                                let n = n.to_owned();
-                                input.remove(0);
-                                input.remove(0);
-                                input.remove(0);
-                                input.remove(0);
-                                return Ok(Rc::new(ASTNode::Number(false, n)));
-                            }
+            TokenInfo::Symbol(SymbolType::Sub) => {
+                if is_first {
+                    if input.len() >= 2 {
+                        if let TokenInfo::Number(n) = &input[1].info {
+                            let n = n.to_owned();
+                            input.remove(0);
+                            input.remove(0);
+                            return Ok(Rc::new(ASTNode::Number(false, n)));
                         }
                     }
+                } else {
+                    return Err(ParseErr {
+                        reason: format!("期望获得数字，却得到了 '{}' ", f.info).to_owned(),
+                        err_type: ParseErrType::Unexpected(f.to_owned()),
+                    });
                 }
-
                 return Err(ParseErr {
                     reason: "期望获得数字，却意外终止".to_owned(),
                     err_type: ParseErrType::Insufficient,
@@ -244,6 +244,9 @@ mod test {
             "3-2*1",
             "3*4*5/2",
             "3*4*5/(-2)",
+            "-2",
+            "-3+.5",
+            "(-2)",
         ];
         for i in 0..input_vec.len() {
             let re = parse_token(input_vec[i]);
@@ -258,7 +261,7 @@ mod test {
         // 测试不符合语法的内容
         let input_vec = vec![
             "56+", "1e9-", "*1.0", "(", ")", "()", "(((2)", "3**3", "4-*2", "45(+6)", "4 5", "++",
-            "--15", "-(5)", "-(+5)", "++++++1", "+1-", "-2", "+3", "3++2", "3--2",
+            "--15", "-(5)", "-(+5)", "++++++1", "+1-", "+3", "3++2", "3--2", "-(2)",
         ];
         for i in 0..input_vec.len() {
             let re = parse_token(input_vec[i]);
