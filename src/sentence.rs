@@ -99,7 +99,7 @@ fn m(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
                 err_type: ParseErrType::Insufficient,
             });
         }
-        let right = at(input, is_first);
+        let right = at(input, false);
         if right.is_err() {
             input.insert(0, temp);
             break;
