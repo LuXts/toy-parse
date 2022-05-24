@@ -1,11 +1,3 @@
-/*
- * @Author: LuXts
- * @Date: 2022-05-07 19:42:56
- * @LastEditTime: 2022-05-08 23:01:02
- * @LastEditors: LuXts
- * @Description:
- * @FilePath: \toy-parse\src\main.rs
- */
 #![windows_subsystem = "windows"]
 
 use crate::{sentence::parse_sentence, token::parse_token, translation::translate_ast};
@@ -61,9 +53,8 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                 }
                 sentence::ParseErrType::Redundant(e2) => {
                     return Err(format!(
-                        "语法分析阶段->在输入的第 {} 个字符处遇到错误: {}，未能解析的输入：'{}' 。",
+                        "语法分析阶段->在输入的第 {} 个字符处遇到错误: 未能解析的输入：'{}' 。",
                         e2 + 1,
-                        e.reason,
                         &input[e2..]
                     )
                     .to_owned());

@@ -1,7 +1,7 @@
-use std::{collections::VecDeque, fmt, rc::Rc};
-
 use crate::sentence::*;
 use bigdecimal::BigDecimal;
+use std::{collections::VecDeque, fmt, rc::Rc};
+
 type Num = BigDecimal;
 
 pub enum TraverseItem {

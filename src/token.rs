@@ -1,6 +1,7 @@
 use bigdecimal::{BigDecimal, ToPrimitive};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, fmt};
+
 type Num = BigDecimal;
 
 // u8(C++ 中的 char) 和 TokenInfo 的对应表，包含了默认符号
