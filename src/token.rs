@@ -24,14 +24,14 @@ pub struct Token {
     pub original: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenInfo {
     Number(Num),        // 数字
     Symbol(SymbolType), // 符号
 }
 
 // 符号类型
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SymbolType {
     LeftBracket,  // 左括号
     RightBracket, // 右括号

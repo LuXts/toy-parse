@@ -1,20 +1,21 @@
 #![windows_subsystem = "windows"]
 
-use crate::{sentence::parse_sentence, token::parse_token, translation::translate_ast};
+use token_render::TokenRender;
+
+use crate::{sentence::parse_sentence, token::parse_token};
 use std::rc::Rc;
 
 mod calculate;
 mod sentence;
 mod token;
-mod translation;
+mod token_render;
 
 fn parse_and_run(input: &str) -> Result<(String, String), String> {
     //println!("输入字符串为    ||    '{}'", &input);
     let mut out = String::from("[ ");
     match parse_token(input) {
-        Ok(mut t) => match parse_sentence(&mut t) {
-            Ok(root) => {
-                let v = translate_ast(root);
+        Ok(t) => match parse_sentence(&mut TokenRender::new_with_tokens(t)) {
+            Ok(v) => {
                 //print!("逆波兰式为      ||    [ ");
                 for item in &v {
                     //print!("{} ", item);

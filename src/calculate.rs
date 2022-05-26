@@ -1,6 +1,7 @@
-use crate::translation::{self, TraverseItem};
 use bigdecimal::{BigDecimal, Zero};
 use std::collections::VecDeque;
+
+use crate::sentence::{self, TraverseItem};
 
 type Num = BigDecimal;
 
@@ -11,28 +12,28 @@ pub fn calculate(exp: &Vec<TraverseItem>) -> Result<Num, String> {
         match item {
             TraverseItem::Operator(op) => {
                 match op {
-                    translation::Operator::Add => {
+                    sentence::Operator::Add => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left + right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    translation::Operator::Sub => {
+                    sentence::Operator::Sub => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left - right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    translation::Operator::Mul => {
+                    sentence::Operator::Mul => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left * right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    translation::Operator::Div => {
+                    sentence::Operator::Div => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             if right == BigDecimal::zero() {
                                 return Err("出现除 0 错误".to_owned());
@@ -42,7 +43,7 @@ pub fn calculate(exp: &Vec<TraverseItem>) -> Result<Num, String> {
                             continue;
                         }
                     }
-                    translation::Operator::Minus => {
+                    sentence::Operator::Minus => {
                         if let Some(temp) = stack.pop_back() {
                             let temp: BigDecimal = -temp;
                             stack.push_back(temp);
