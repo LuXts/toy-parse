@@ -46,27 +46,30 @@ pub fn parse_sentence(input: &mut Vec<Token>) -> Result<ASTRoot, ParseErr> {
     }
 }
 
+// parse_sentence => a#
+// a1 => m1 o1 a | m1
+// m1 => at1 o2 m | at1
+// at1 => (a1) | -num | num
+// o1 => + | -
+// o2 => * | /
+// a => m o1 a | m
+// m => at o2 m | at
+// at => (a) | num
+
 fn a(input: &mut Vec<Token>) -> Result<Rc<ASTNode>, ParseErr> {
     let mut re = m(input, true)?;
 
     while !input.is_empty() {
-        let temp = input[0].to_owned();
         let op = o1(input);
         if op.is_err() {
             break;
         }
-        if input.is_empty() {
-            return Err(ParseErr {
-                reason: "期望获得数字 ，却意外终止".to_owned(),
-                err_type: ParseErrType::Insufficient,
-            });
+        let right_re = m(input, false);
+        if let Ok(right) = right_re {
+            re = Rc::new(ASTNode::Expression(re, op.unwrap(), right));
+        } else {
+            return right_re;
         }
-        let right = m(input, false);
-        if right.is_err() {
-            input.insert(0, temp);
-            break;
-        }
-        re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
     Ok(re)
 }
@@ -88,24 +91,18 @@ fn m(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
     let mut re = at(input, is_first)?;
 
     while !input.is_empty() {
-        let temp = input[0].to_owned();
         let op = o2(input);
         if op.is_err() {
             break;
         }
-        if input.is_empty() {
-            return Err(ParseErr {
-                reason: "期望获得数字 ，却意外终止".to_owned(),
-                err_type: ParseErrType::Insufficient,
-            });
+        let right_re = at(input, false);
+        if let Ok(right) = right_re {
+            re = Rc::new(ASTNode::Expression(re, op.unwrap(), right));
+        } else {
+            return right_re;
         }
-        let right = at(input, false);
-        if right.is_err() {
-            input.insert(0, temp);
-            break;
-        }
-        re = Rc::new(ASTNode::Expression(re, op.unwrap(), right.unwrap()));
     }
+
     Ok(re)
 }
 
@@ -124,7 +121,9 @@ fn o2(input: &mut Vec<Token>) -> Result<OperatorType, ()> {
 
 fn at(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
     let re = num(input, is_first);
-    if re.is_err() {
+    if let Ok(result) = re {
+        return Ok(result);
+    } else {
         if let Some(f) = input.get(0) {
             if let TokenInfo::Symbol(SymbolType::LeftBracket) = f.info {
                 input.remove(0);
@@ -152,11 +151,14 @@ fn at(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
                 });
             }
         }
+        return Err(ParseErr {
+            reason: "期望获得 ( 或数字，却意外终止".to_owned(),
+            err_type: ParseErrType::Insufficient,
+        });
     }
-    return re;
 }
 
-fn num(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> {
+fn num(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ()> {
     if let Some(f) = input.get(0) {
         match &f.info {
             TokenInfo::Number(n) => {
@@ -174,25 +176,12 @@ fn num(input: &mut Vec<Token>, is_first: bool) -> Result<Rc<ASTNode>, ParseErr> 
                             return Ok(Rc::new(ASTNode::Number(false, n)));
                         }
                     }
-                } else {
-                    return Err(ParseErr {
-                        reason: format!("期望获得数字，却得到了 '{}' ", f.info).to_owned(),
-                        err_type: ParseErrType::Unexpected(f.to_owned()),
-                    });
                 }
             }
-            _ => {
-                return Err(ParseErr {
-                    reason: format!("期望获得数字，却得到了 '{}' ", f.info).to_owned(),
-                    err_type: ParseErrType::Unexpected(f.to_owned()),
-                });
-            }
+            _ => {}
         }
     }
-    return Err(ParseErr {
-        reason: "期望获得数字，却意外终止".to_owned(),
-        err_type: ParseErrType::Insufficient,
-    });
+    return Err(());
 }
 
 #[cfg(test)]
