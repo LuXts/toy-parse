@@ -1,4 +1,4 @@
-use bigdecimal::{BigDecimal, ToPrimitive};
+use bigdecimal::BigDecimal;
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, fmt};
 
@@ -87,16 +87,16 @@ impl fmt::Display for TokenInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TokenInfo::Symbol(symbol) => match symbol {
-                SymbolType::LeftBracket => write!(f, "("),
-                SymbolType::RightBracket => write!(f, ")"),
-                SymbolType::Blank => write!(f, "_"),
-                SymbolType::Add => write!(f, "+"),
-                SymbolType::Sub => write!(f, "-"),
-                SymbolType::Mul => write!(f, "*"),
-                SymbolType::Div => write!(f, "/"),
+                SymbolType::LeftBracket => write!(f, "左括号"),
+                SymbolType::RightBracket => write!(f, "右括号"),
+                SymbolType::Blank => write!(f, "空白符号"),
+                SymbolType::Add => write!(f, "加号"),
+                SymbolType::Sub => write!(f, "减号"),
+                SymbolType::Mul => write!(f, "乘号"),
+                SymbolType::Div => write!(f, "除号"),
             },
-            TokenInfo::Number(number) => {
-                write!(f, "{}", number.to_f64().unwrap())
+            TokenInfo::Number(n) => {
+                write!(f, "数字：{}", n.with_scale(15).normalized().to_string())
             }
         }
     }
