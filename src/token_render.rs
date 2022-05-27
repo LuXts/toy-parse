@@ -1,5 +1,5 @@
-use crate::sentence::ParseErr;
-use crate::sentence::ParseErrType;
+use crate::parse::ParseErr;
+use crate::parse::ParseErrType;
 use crate::token::*;
 
 /**

@@ -108,7 +108,7 @@ impl fmt::Display for RPNItem {
 // at -> (a) | num
 
 /// 语法分析部分
-pub fn parse_sentence(render: &mut TokenRender) -> Result<Vec<RPNItem>, ParseErr> {
+pub fn parse(render: &mut TokenRender) -> Result<Vec<RPNItem>, ParseErr> {
     let mut output = vec![];
 
     a(render, &mut output)?;
@@ -276,7 +276,7 @@ fn num(render: &mut TokenRender, output: &mut Vec<RPNItem>) -> bool {
 #[cfg(test)]
 mod test {
     use super::tokenization;
-    use crate::sentence::parse_sentence;
+    use crate::parse::parse;
     use crate::token_render::*;
 
     #[test]
@@ -305,7 +305,7 @@ mod test {
         for i in 0..input_vec.len() {
             let re = tokenization(input_vec[i]);
             assert!(re.is_ok());
-            let re = parse_sentence(&mut TokenRender::new_with_tokens(re.unwrap()));
+            let re = parse(&mut TokenRender::new_with_tokens(re.unwrap()));
             assert!(re.is_ok(), "input: {}", input_vec[i]);
         }
     }
@@ -320,7 +320,7 @@ mod test {
         for i in 0..input_vec.len() {
             let re = tokenization(input_vec[i]);
             assert!(re.is_ok());
-            let re = parse_sentence(&mut TokenRender::new_with_tokens(re.unwrap()));
+            let re = parse(&mut TokenRender::new_with_tokens(re.unwrap()));
             assert!(re.is_err(), "input: {}", input_vec[i]);
         }
     }

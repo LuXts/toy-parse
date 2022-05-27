@@ -1,4 +1,4 @@
-use crate::sentence::{self, RPNItem};
+use crate::parse::{self, RPNItem};
 use bigdecimal::{BigDecimal, Zero};
 use std::collections::VecDeque;
 
@@ -21,28 +21,28 @@ pub fn calculate(exp: &Vec<RPNItem>) -> Result<Num, String> {
                 // 如果是运算符，就根据运算符的类型取出运算栈中的数字进行操作
                 // 操作完成之后把结果 push_back 回运算栈
                 match op {
-                    sentence::Operator::Add => {
+                    parse::Operator::Add => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left + right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    sentence::Operator::Sub => {
+                    parse::Operator::Sub => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left - right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    sentence::Operator::Mul => {
+                    parse::Operator::Mul => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             let temp = left * right;
                             stack.push_back(temp);
                             continue;
                         }
                     }
-                    sentence::Operator::Div => {
+                    parse::Operator::Div => {
                         if let (Some(right), Some(left)) = (stack.pop_back(), stack.pop_back()) {
                             if right == BigDecimal::zero() {
                                 return Err("出现除 0 错误".to_owned());
@@ -52,7 +52,7 @@ pub fn calculate(exp: &Vec<RPNItem>) -> Result<Num, String> {
                             continue;
                         }
                     }
-                    sentence::Operator::Minus => {
+                    parse::Operator::Minus => {
                         if let Some(temp) = stack.pop_back() {
                             let temp: BigDecimal = -temp;
                             stack.push_back(temp);

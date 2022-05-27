@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use crate::{sentence::parse_sentence, token::tokenization};
+use crate::{parse::parse, token::tokenization};
 use std::rc::Rc;
 use token_render::TokenRender;
 
@@ -8,7 +8,7 @@ use token_render::TokenRender;
 mod calculate;
 
 /// 语法分析的模块
-mod sentence;
+mod parse;
 
 /// 词法分析的模块
 mod token;
@@ -22,7 +22,7 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
         Ok(t) => {
             // 分词成功
             // 语法分析
-            match parse_sentence(&mut TokenRender::new_with_tokens(t)) {
+            match parse(&mut TokenRender::new_with_tokens(t)) {
                 Ok(v) => {
                     // 语法分析成功
 
@@ -57,7 +57,7 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                 Err(e) => {
                     // 根据错误类型输出不同的结果
                     match e.err_type {
-                        sentence::ParseErrType::Unexpected(e2) => {
+                        parse::ParseErrType::Unexpected(e2) => {
                             // 未预期的 token
 
                             return Err(
@@ -69,13 +69,13 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                                 ).to_owned()
                             );
                         }
-                        sentence::ParseErrType::Insufficient => {
+                        parse::ParseErrType::Insufficient => {
                             // 预期某一个 token 但是却突然终止
 
                             return Err(format!("语法分析阶段->输入末尾遇到错误: {} !", e.reason)
                                 .to_owned());
                         }
-                        sentence::ParseErrType::Redundant(e2) => {
+                        parse::ParseErrType::Redundant(e2) => {
                             // 被放弃，未能解析的输入
 
                             return Err(
