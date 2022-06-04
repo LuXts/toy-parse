@@ -75,17 +75,6 @@ fn parse_and_run(input: &str) -> Result<(String, String), String> {
                             return Err(format!("语法分析阶段->输入末尾遇到错误: {} !", e.reason)
                                 .to_owned());
                         }
-                        parse::ParseErrType::Redundant(e2) => {
-                            // 被放弃，未能解析的输入
-
-                            return Err(
-                                format!(
-                                    "语法分析阶段->在输入的第 {} 个字符处遇到错误: 未能解析的输入：'{}' 。",
-                                    e2 + 1,
-                                    &input[e2..]
-                                ).to_owned()
-                            );
-                        }
                     }
                 }
             }

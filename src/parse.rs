@@ -5,7 +5,6 @@ use bigdecimal::Zero;
 use std::fmt;
 
 type Num = BigDecimal;
-type Position = usize;
 
 /**
 语法分析器的错误输出。
@@ -26,7 +25,6 @@ pub struct ParseErr {
 
 * `ParseErrType::Unexpected(Token)` 未预期的 `token`
 * `ParseErrType::Insufficient` 预期某一个 `token` 但是却突然终止
-* `ParseErrType::Redundant(Position)` 被放弃，未能解析的输入
 
  */
 #[derive(Debug, Clone)]
@@ -35,8 +33,6 @@ pub enum ParseErrType {
     Unexpected(Token),
     /// 预期某一个 `token` 但是却突然终止
     Insufficient,
-    /// 被放弃，未能解析的输入
-    Redundant(Position),
 }
 
 /**
@@ -119,10 +115,11 @@ pub fn parse(render: &mut TokenRender) -> Result<Vec<RPNItem>, ParseErr> {
         return Ok(output);
     } else {
         // 如果还有剩余的 token
+        let token = render.peek();
 
         return Err(ParseErr {
-            reason: "有未能解析的输入，感觉这个错误不应该出现，请告诉我这个表达式是什么".to_owned(),
-            err_type: ParseErrType::Redundant(render.peek().position),
+            reason: format!("期望输入结束，却得到了{}", token.info).to_owned(),
+            err_type: ParseErrType::Unexpected(render.peek().clone()),
         });
     }
 }
