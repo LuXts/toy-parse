@@ -93,14 +93,14 @@ impl fmt::Display for RPNItem {
     }
 }
 
-// parse_sentence -> a1#
-// a1 -> m1 o1 a | m1
-// m1 -> at1 o2 m | at1
-// at1 -> -(a1) | (a1) | -num | num
+// 大致上的文法和函数的对应关系，将就着看吧
+// parse_sentence -> a#
+// a -> m1 { o1 m }
 // o1 -> + | -
+// m1 -> at1 { o2 at }
 // o2 -> * | /
-// a -> m o1 a | m
-// m -> at o2 m | at
+// at1 -> -(a) | (a) | -num | num
+// m -> at { o2 at }
 // at -> (a) | num
 
 /// 语法分析部分

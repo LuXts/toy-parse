@@ -21,7 +21,8 @@ MainWindow := Window {
     property window-height <=> height;
     property <int>output-width;
     property <int>re-polish-width;
-    property out-viewport-x <=> output-view.viewport-x;
+    property output-viewport-x <=> output-view.viewport-x;
+     property re-polish-viewport-x <=> re-polish-view.viewport-x;
     callback input(string);
     VerticalLayout{
         padding: 10px;
@@ -58,7 +59,7 @@ MainWindow := Window {
                 vertical-alignment: top;
                 horizontal-alignment: right;
             }
-            ScrollView {
+            re-polish-view:=ScrollView {
                 height: {window-height * 0.3};
                 width: InputEdit.width;
                 viewport-width: re-polish.width;
