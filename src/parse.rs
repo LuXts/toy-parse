@@ -134,17 +134,6 @@ fn a(render: &mut TokenRender, output: &mut Vec<RPNItem>) -> Result<(), ParseErr
         let op = o1(render);
 
         if op.is_err() {
-            // 如果不是 '+' / '-'
-            // 检查 a 的 follow 集，也就是检查下一个是不是 ')'
-            // 如果不是，那就报错
-
-            render.expect(
-                TokenInfo::Symbol(SymbolType::RightBracket),
-                |token| {
-                    return format!("期望获得运算符，却得到了{}", token.info).to_owned();
-                },
-                "预料之外的终止错误，感觉好像输入被中途篡改一样离谱".to_owned(),
-            )?;
             break;
         }
 

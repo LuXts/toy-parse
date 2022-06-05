@@ -3,17 +3,20 @@ import {
     LineEdit, ListView, GroupBox, CheckBox,Slider,TextEdit
 } from "std-widgets.slint";
 
+import "FiraCode-Regular.ttf";
 
 MainWindow := Window {
+    default-font-family: "Fira Code";
     icon: @image-url("Icon.png");
-    min-width: 800px;
+    min-width: 1000px;
     min-height: 550px;
-    preferred-width: 800px;
+    preferred-width: 1000px;
     preferred-height: 550px;
     default-font-size: 16px;
     title: "四则运算编译解释器";
     property <string> re-polish-content <=> re-polish.text;
     property <string> output-content <=> output.text;
+    property <string> input-content <=> InputEdit.text;
     property input-border-color <=> output.color;
     property window-height <=> height;
     callback input(string);

@@ -114,6 +114,8 @@ pub struct LexerErr {
     pub reason: String,
     /// 错误发生的位置
     pub position: usize,
+    /// 错误原字符串
+    pub original_str: String,
 }
 
 /**
@@ -165,6 +167,7 @@ pub fn tokenization(input: &str) -> Result<Vec<Token>, LexerErr> {
                             return Err(LexerErr {
                                 reason,
                                 position: unparsed_position,
+                                original_str: input[unparsed_position..current_position].to_owned(),
                             });
                         }
                     };
@@ -198,19 +201,12 @@ pub fn tokenization(input: &str) -> Result<Vec<Token>, LexerErr> {
                         return Err(LexerErr {
                             reason,
                             position: unparsed_position,
+                            original_str: input[unparsed_position..current_position].to_owned(),
                         });
                     }
                 };
             }
         }
-    }
-
-    if tokens.is_empty() {
-        // 如果最后解析的 tokens 里面什么都没有，那就代表输入的表达式完全无效
-        return Err(LexerErr {
-            reason: "没有输入任何有效表达式！".to_owned(),
-            position: 0,
-        });
     }
 
     Ok(tokens)
