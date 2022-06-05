@@ -154,10 +154,15 @@ fn main() {
                 // 如果输入不为空
                 match parse_and_run(input.as_str()) {
                     Ok((re_polish, output)) => {
+                        main_window.set_out_viewport_x(0f32);
+                        main_window.set_output_width(output.len() as i32 + 20);
+                        main_window.set_re_polish_width(re_polish.len() as i32 + 20);
                         main_window.set_output_content(output.into());
                         main_window.set_re_polish_content(re_polish.into());
                     }
                     Err(e) => {
+                        main_window.set_output_width(input.len() as i32 + 20);
+                        main_window.set_re_polish_width(15);
                         main_window.set_output_content(e.into());
                         main_window.set_re_polish_content("解析表达式失败！".into());
                     }

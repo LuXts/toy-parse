@@ -1,6 +1,6 @@
 import {
-    ComboBox, VerticalBox, HorizontalBox, GridBox, Button,
-    LineEdit, ListView, GroupBox, CheckBox,Slider,TextEdit
+    VerticalBox, HorizontalBox, Button,
+    LineEdit,ScrollView
 } from "std-widgets.slint";
 
 import "FiraCode-Regular.ttf";
@@ -17,8 +17,11 @@ MainWindow := Window {
     property <string> re-polish-content <=> re-polish.text;
     property <string> output-content <=> output.text;
     property <string> input-content <=> InputEdit.text;
-    property input-border-color <=> output.color;
+    property input-border-color <=> colormark.color;
     property window-height <=> height;
+    property <int>output-width;
+    property <int>re-polish-width;
+    property out-viewport-x <=> output-view.viewport-x;
     callback input(string);
     VerticalLayout{
         padding: 10px;
@@ -55,9 +58,10 @@ MainWindow := Window {
                 vertical-alignment: top;
                 horizontal-alignment: right;
             }
-            Rectangle {
+            ScrollView {
                 height: {window-height * 0.3};
                 width: InputEdit.width;
+                viewport-width: re-polish.width;
                 border-width: 1px;
                 border-radius: 4px;
                 border-color: input-border-color;
@@ -66,8 +70,8 @@ MainWindow := Window {
                     re-polish:= Text {
                         font-size: 14px;
                         text: "";
-                        wrap: word-wrap;
-                        width: {InputEdit.width - 10px};
+                        wrap: no-wrap;
+                        width: {re-polish-width * 10px};
                     }
                 }
             } 
@@ -76,27 +80,27 @@ MainWindow := Window {
         HorizontalLayout{
             vertical-stretch: 0.7;
             spacing: 10px;
-            Text {
+            colormark:= Text {
                 width: 120px;
                 font-weight: 600;
                 text: "输出:";
                 vertical-alignment: top;
                 horizontal-alignment: right;
             }
-            Rectangle {
+            output-view:= ScrollView {
                 width: InputEdit.width;
+                viewport-width: output.width;
+                animate viewport-x {
+                    duration: 250ms;
+                }
                 border-width: 1px;
                 border-radius: 4px;
                 border-color: input-border-color;
-                HorizontalLayout{
-                    padding: 5px;
-                    output:= Text {
-                        font-size: 14px;
-                        text: " ";
-                        wrap: word-wrap;
-                        width: {InputEdit.width - 10px};
-                        horizontal-stretch: 1;
-                    }
+                output:= Text {
+                    width: {output-width * 10px};
+                    wrap:no-wrap;
+                    font-size: 14px;
+                    text: " ";
                 }
             }
             Rectangle{width: 80px;}
